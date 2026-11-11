@@ -1,0 +1,125 @@
+---
+title: "Experimental Label - Coliflor"
+format:
+  html:
+    toc: true
+    toc-expand: true
+    toc-depth: 4
+    toc-location: left
+    number-sections: true
+    embed-resources: true
+    code-fold: false
+editor_options: 
+  chunk_output_type: console
+execute: 
+  warning: false
+  message: false
+  echo: true
+---
+
+# Setup
+
+```{r}
+#| label: setup
+
+source("https://inkaverse.com/setup.r")
+
+gs4_deauth()
+
+font <- c("Merriweather Sans", "Permanent Marker", "Tillana")
+huito_fonts(font)
+```
+
+# Field-book
+
+```{r}
+#| label: fieldbook
+
+url <- "https://docs.google.com/spreadsheets/d/1fQTVUyZIlGckLvdp1hmT8kg66MvLvNr96nI4fkdBta0/edit?usp=sharing"
+
+fb <- url %>%
+  as_sheets_id() %>%
+  range_read(sheet = "fb") %>%
+  mutate(across(c(plots, ntreat, dosis_ml, block), as.character)
+         , dosis = paste(dosis_ml, "mL")                     # ej. "10 mL"
+         )
+
+fb %>% dplyr::select(qrcode, plots, ntreat, dosis, block)
+```
+
+# Labels
+
+```{r}
+#| label: labels
+
+label <- fb %>%
+  label_layout(size = c(5.2, 10)
+               , border_color = "forestgreen"
+               , border_width = 1.5
+               ) %>%
+  include_image(
+    value = "https://doctoradofisica.uni.edu.pe/wp-content/uploads/2024/01/d123d3.webp"
+    , size = c(3.0, 0.9)
+    , position = c(1.75, 9.3)
+    ) %>%
+  include_text(value = "plots"
+               , position = c(4.25, 9.3)
+               , size = 15
+               , color = "black"
+               , font = font[3]
+               ) %>%
+  include_image(
+    value = "https://huito.inkaverse.com/img/scale.pdf"
+    , size = c(4.8, 0.77)
+    , position = c(2.6, 8.35)
+    ) %>%
+  include_barcode(
+    value = "qrcode"
+    , size = c(4.6, 4.6)
+    , position = c(2.6, 5.5)
+    ) %>%
+  include_text(value = "dosis"
+               , position = c(2.6, 2.6)
+               , size = 14
+               , color = "blue"
+               , font = font[1]
+               , prefix = "Dosis: "
+               ) %>%
+  include_text(value = "ntreat"
+               , position = c(1.5, 1.8)
+               , size = 12
+               , color = "red"
+               , font = font[1]
+               , prefix = "Trat: "
+               ) %>%
+  include_text(value = "block"
+               , position = c(3.7, 1.8)
+               , size = 12
+               , color = "darkgreen"
+               , font = font[1]
+               , prefix = "Bloque: "
+               ) %>%
+  include_image(
+    value = "https://huito.inkaverse.com/img/scale.pdf"
+    , size = c(4.8, 0.77)
+    , position = c(2.6, 0.85)
+    , opts = 'image_convert(type = "Grayscale")'
+    )
+
+label %>% label_print(mode = "preview")
+```
+
+# Labels to print
+
+```{r}
+#| label: print
+#| eval: false
+
+dir.create("files", showWarnings = FALSE)
+
+label %>%
+  label_print(mode = "complete"
+              , filename = "files/labels_coliflor"
+              , units = "cm"
+              )
+```
